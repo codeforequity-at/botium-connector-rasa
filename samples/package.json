@@ -1,0 +1,22 @@
+{
+  "name": "rasa-sample",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "mocha spec"
+  },
+  "botium": {
+    "convodirs": [
+      "spec\\convo"
+    ],
+    "expandConvos": true,
+    "expandUtterancesToConvos": false
+  },
+  "devDependencies": {
+    "mocha": "latest",
+    "botium-bindings": "latest",
+    "botium-connector-rasa": "../"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "botium": {
+    "Capabilities": {
+      "PROJECTNAME": "Botium Project Rasa",
+      "CONTAINERMODE": "rasa",
+      "RASA_REST_INPUT_URL": "http://localhost:5005/webhooks/rest/webhook"
+    }
+  }
+}
