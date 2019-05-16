@@ -43,7 +43,8 @@ class BotiumConnectorRasa {
             [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
             [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "message": "{{msg.messageText}}", "sender": "{{botium.conversationId}}" }',
             [CoreCapabilities.SIMPLEREST_RESPONSE_JSONPATH]: '$.*.text',
-            [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.*.image'
+            [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.*.image',
+            [CoreCapabilities.SIMPLEREST_BUTTONS_JSONPATH]: '$.*.buttons.*.payload'
           }
           this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps})
           break
