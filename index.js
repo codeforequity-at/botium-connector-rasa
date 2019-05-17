@@ -46,7 +46,7 @@ class BotiumConnectorRasa {
             [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.*.image',
             [CoreCapabilities.SIMPLEREST_BUTTONS_JSONPATH]: '$.*.buttons.*.payload'
           }
-          this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps})
+          this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
           break
         default:
           throw new Error(`Unknown mode ${this.caps[Capabilities.RASA_MODE]}`)
