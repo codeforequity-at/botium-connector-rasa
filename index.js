@@ -49,13 +49,13 @@ class BotiumConnectorRasa {
           // values delegated direct
           _.forIn(this.caps, (value, key) => {
             if (key.startsWith('RASA_REST_INPUT_')) {
-              this.delegateCaps[key.replace('RASA_REST_INPUT_', 'SIMPLEREST_')] = value;
+              this.delegateCaps[key.replace('RASA_REST_INPUT_', 'SIMPLEREST_')] = value
             } else if (!key.startsWith('SIMPLEREST_') && key !== Capabilities.RASA_MODE) {
-              this.delegateCaps[key] = value;
+              this.delegateCaps[key] = value
             }
           })
 
-          this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps})
+          this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
           break
         default:
           throw new Error(`Unknown mode ${this.caps[Capabilities.RASA_MODE]}`)
