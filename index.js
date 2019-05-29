@@ -1,5 +1,5 @@
-var util = require('util')
-var _ = require('lodash')
+const util = require('util')
+const _ = require('lodash')
 const debug = require('debug')('botium-connector-rasa')
 
 const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
@@ -37,8 +37,8 @@ class BotiumConnectorRasa {
             parsed.pathname = '/version'
             pingUrl = parsed.href
           }
+          // default values
           this.delegateCaps = {
-            [CoreCapabilities.SIMPLEREST_URL]: this.caps[Capabilities.RASA_REST_INPUT_URL],
             [CoreCapabilities.SIMPLEREST_PING_URL]: pingUrl,
             [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
             [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "message": "{{msg.messageText}}", "sender": "{{botium.conversationId}}" }',
@@ -46,6 +46,15 @@ class BotiumConnectorRasa {
             [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.*.image',
             [CoreCapabilities.SIMPLEREST_BUTTONS_JSONPATH]: '$.*.buttons.*.payload'
           }
+          // values delegated direct
+          _.forIn(this.caps, (value, key) => {
+            if (key.startsWith('RASA_REST_INPUT_')) {
+              this.delegateCaps[key.replace('RASA_REST_INPUT_', 'SIMPLEREST_')] = value;
+            } else if (!key.startsWith('SIMPLEREST_') && key !== Capabilities.RASA_MODE) {
+              this.delegateCaps[key] = value;
+            }
+          })
+
           this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps})
           break
         default:

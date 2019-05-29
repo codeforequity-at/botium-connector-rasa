@@ -11,7 +11,9 @@ This is a [Botium](https://github.com/codeforequity-at/botium-core) connector fo
 __Did you read the [Botium in a Nutshell](https://medium.com/@floriantreml/botium-in-a-nutshell-part-1-overview-f8d0ceaf8fb4) articles? Be warned, without prior knowledge of Botium you won't be able to properly use this library!__
 
 ## How it works
-Botium connects to your Rasa chatbot. This connector works just with the [Rasa RestInput channel](https://rasa.com/docs/core/connectors/#restinput) together.
+Botium connects to your Rasa chatbot. 
+
+This connector works just with the [Rasa RestInput channel](https://rasa.com/docs/core/connectors/#restinput) together.
 
 Be aware, if Rasa does not understand the request, and it has no fallback intent, then the response will be empty ([see this test case](./samples/spec/convo/noanswer.convo.txt)).
 
@@ -96,5 +98,43 @@ you can start it using our [dockerized version](./samples/rasa_docker)
 
 Set the capability __CONTAINERMODE__ to __rasa__ to activate this connector.
 
+Rasa connector is a wrapper around [Generic HTTP(S)/JSON Connector](https://botium.atlassian.net/wiki/spaces/BOTIUM/pages/24510469/Generic+HTTP+S+JSON+Connector). Just sets some capabilities with defaults to simplify configuration.
+
+You can use all capabilities of _Generic HTTP(S)/JSON Connector_ with Rasa connector. For example RASA_REST_INPUT_URL is SIMPLEREST_URL. See the description of capabilities there.
+
 ### RASA_REST_INPUT_URL
-Rasa chatbot endpoint url
+Rasa endpoint URL. This is the only required capability.
+
+### RASA_REST_INPUT_PING_URL
+Default:
+
+Same URL as _RASA_REST_INPUT_URL_, just the path is _/version_
+
+### RASA_REST_INPUT_METHOD
+Default:
+
+```POST```
+
+### RASA_REST_INPUT_BODY_TEMPLATE
+Default:
+
+```{ "message": "{{msg.messageText}}", "sender": "{{botium.conversationId}}" }```
+
+### RASA_REST_INPUT_RESPONSE_JSONPATH
+Default: 
+
+```$.*.text```
+
+### RASA_REST_INPUT_MEDIA_JSONPATH
+Default:
+
+```$.*.image```
+
+### RASA_REST_INPUT_BUTTONS_JSONPATH
+Default:
+
+```$.*.buttons.*.payload```
+
+### RASA_REST_INPUT_...
+You can use all other _Generic HTTP(S)/JSON Connector_ capabilities. Rasa connector does not set default value to them.
+
