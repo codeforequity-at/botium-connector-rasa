@@ -2,7 +2,7 @@
 
 [![NPM](https://nodei.co/npm/botium-connector-rasa.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/botium-connector-rasa/)
 
-[![Codeship Status for codeforequity-at/botium-connector-rasa](https://app.codeship.com/projects/c947b780-0daa-0137-4acf-3a9e8715cbf8/status?branch=master)](https://app.codeship.com/projects/326745)
+[![Codeship Status for codeforequity-at/botium-connector-rasa](https://app.codeship.com/projects/85c1e8b0-5ac7-0137-3809-76862924ef8c/status?branch=master)](https://app.codeship.com/projects/342527)
 [![npm version](https://badge.fury.io/js/botium-connector-rasa.svg)](https://badge.fury.io/js/botium-connector-rasa)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
