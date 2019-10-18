@@ -7,8 +7,14 @@ const CoreCapabilities = require('botium-core/src/Capabilities')
 
 const Capabilities = {
   RASA_MODE: 'RASA_MODE',
-  RASA_REST_INPUT_URL: 'RASA_REST_INPUT_URL',
-  RASA_REST_INPUT_PING_URL: 'RASA_REST_INPUT_PING_URL'
+  RASA_ENDPOINT_URL: 'RASA_ENDPOINT_URL',
+  RASA_ENDPOINT_PING_URL: 'RASA_ENDPOINT_PING_URL',
+  RASA_ENDPOINT_TOKEN: 'RASA_ENDPOINT_TOKEN',
+  RASA_ENDPOINT_JWT: 'RASA_ENDPOINT_JWT'
+}
+
+const Defaults = {
+  [Capabilities.RASA_MODE]: 'REST_INPUT'
 }
 
 class BotiumConnectorRasa {
@@ -22,72 +28,102 @@ class BotiumConnectorRasa {
   Validate () {
     debug('Validate called')
 
-    if (!this.caps[Capabilities.RASA_MODE]) this.caps[Capabilities.RASA_MODE] = 'REST_INPUT'
-    switch (this.caps[Capabilities.RASA_MODE]) {
-      case 'REST_INPUT':
-        if (!this.caps[Capabilities.RASA_REST_INPUT_URL]) throw new Error('RASA_REST_INPUT_URL capability required')
-    }
+    this.caps = Object.assign({}, Defaults, this.caps)
+
+    if (this.caps[Capabilities.RASA_MODE] !== 'REST_INPUT' && this.caps[Capabilities.RASA_MODE] !== 'NLU_INPUT') throw new Error('RASA_MODE capability either REST_INPUT or NLU_INPUT')
+
+    this.delegateCaps = {}
 
     if (!this.delegateContainer) {
-      switch (this.caps[Capabilities.RASA_MODE]) {
-        case 'REST_INPUT':
-          let pingUrl = this.caps[Capabilities.RASA_REST_INPUT_PING_URL]
-          if (_.isUndefined(pingUrl) || _.isNull(pingUrl)) {
-            const parsed = new URL(this.caps[Capabilities.RASA_REST_INPUT_URL])
-            parsed.pathname = '/version'
-            pingUrl = parsed.href
-          }
-          // default values
-          this.delegateCaps = {
-            [CoreCapabilities.SIMPLEREST_PING_URL]: pingUrl,
-            [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
-            [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "message": "{{msg.messageText}}", "sender": "{{botium.conversationId}}" }',
-            [CoreCapabilities.SIMPLEREST_RESPONSE_JSONPATH]: '$.*.text',
-            [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.*.image',
-            [CoreCapabilities.SIMPLEREST_BUTTONS_JSONPATH]: '$.*.buttons.*.payload'
-          }
-          // values delegated direct
-          _.forIn(this.caps, (value, key) => {
-            if (key.startsWith('RASA_REST_INPUT_')) {
-              this.delegateCaps[key.replace('RASA_REST_INPUT_', 'SIMPLEREST_')] = value
-            } else if (!key.startsWith('SIMPLEREST_') && key !== Capabilities.RASA_MODE) {
-              this.delegateCaps[key] = value
-            }
-          })
+      let endpointPathname = ''
+      if (this.caps[Capabilities.RASA_MODE] === 'REST_INPUT') {
+        endpointPathname = 'webhooks/rest/webhook'
 
-          this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
-          break
-        default:
-          throw new Error(`Unknown mode ${this.caps[Capabilities.RASA_MODE]}`)
+        Object.assign(this.delegateCaps, {
+          [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
+          [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "message": "{{msg.messageText}}", "sender": "{{botium.conversationId}}" }',
+          [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.*',
+          [CoreCapabilities.SIMPLEREST_RESPONSE_JSONPATH]: '$.text',
+          [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.image',
+          [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg }) => {
+            if (botMsg.sourceData.buttons) {
+              botMsg.buttons = botMsg.sourceData.buttons.map(b => ({ text: b.title, payload: b.payload }))
+            }
+          }
+        })
+      } else if (this.caps[Capabilities.RASA_MODE] === 'NLU_INPUT') {
+        endpointPathname = 'model/parse'
+
+        Object.assign(this.delegateCaps, {
+          [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
+          [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "text": "{{msg.messageText}}" }',
+          [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg }) => {
+            botMsg.nlp = {
+              intent: {
+              }
+            }
+            if (botMsg.sourceData.intent) {
+              botMsg.nlp.intent = {
+                name: botMsg.sourceData.intent.name,
+                confidence: botMsg.sourceData.intent.confidence
+              }
+            }
+            if (botMsg.sourceData.intent_ranking) {
+              botMsg.nlp.intent.intents = botMsg.sourceData.intent_ranking.map(i => ({ name: i.name, confidence: i.confidence }))
+            }
+            if (botMsg.sourceData.entities) {
+              botMsg.nlp.entities = botMsg.sourceData.entities.map(e => ({ name: e.entity, value: e.value, confidence: e.confidence }))
+            }
+          }
+        })
       }
 
+      let url = this.caps[Capabilities.RASA_ENDPOINT_URL]
+      if (!url.endsWith('/')) url = url + '/'
+      url = url + endpointPathname
+      if (this.caps[Capabilities.RASA_ENDPOINT_TOKEN]) {
+        url = url + '?token=' + this.caps[Capabilities.RASA_ENDPOINT_TOKEN]
+      }
+      this.delegateCaps[CoreCapabilities.SIMPLEREST_URL] = url
+
+      if (this.caps[Capabilities.RASA_ENDPOINT_JWT]) {
+        this.delegateCaps[CoreCapabilities.SIMPLEREST_HEADERS_TEMPLATE] = {
+          'Authorization': 'Bearer ' + this.caps[Capabilities.RASA_ENDPOINT_JWT]
+        }
+      }
+
+      if (this.caps[Capabilities.RASA_ENDPOINT_PING_URL]) {
+        this.delegateCaps[CoreCapabilities.SIMPLEREST_PING_URL] = this.caps[Capabilities.RASA_ENDPOINT_PING_URL]
+      } else {
+        let pingUrl = this.caps[Capabilities.RASA_ENDPOINT_URL]
+        if (!pingUrl.endsWith('/')) pingUrl = pingUrl + '/'
+        pingUrl = pingUrl + 'version'
+        this.delegateCaps[CoreCapabilities.SIMPLEREST_PING_URL] = pingUrl
+      }
+
+      // values delegated direct
+      _.forIn(this.caps, (value, key) => {
+        if (key.startsWith('RASA_')) {
+          this.delegateCaps[key.replace('RASA_', 'SIMPLEREST_')] = value
+        } else if (!key.startsWith('SIMPLEREST_') && key !== Capabilities.RASA_MODE) {
+          this.delegateCaps[key] = value
+        }
+      })
+
       debug(`Validate delegateCaps ${util.inspect(this.delegateCaps)}`)
+      this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
     }
 
     debug(`Validate delegate`)
-    this.delegateContainer.Validate()
-
-    // SimpleRestContainer is synch
-    return Promise.resolve()
+    return this.delegateContainer.Validate && this.delegateContainer.Validate()
   }
 
   Build () {
-    if (this.delegateContainer.Build) {
-      this.delegateContainer.Build()
-    }
-
-    debug('Build called')
-    return Promise.resolve()
+    return this.delegateContainer.Build && this.delegateContainer.Build()
   }
 
   Start () {
-    debug('Start called')
-
-    if (this.delegateContainer.Start) {
-      this.delegateContainer.Start()
-    }
-
-    return Promise.resolve()
+    return this.delegateContainer.Start && this.delegateContainer.Start()
   }
 
   UserSays (msg) {
@@ -96,22 +132,11 @@ class BotiumConnectorRasa {
   }
 
   Stop () {
-    debug('Stop called')
-
-    if (this.delegateContainer.Stop) {
-      this.delegateContainer.Stop()
-    }
-
-    return Promise.resolve()
+    return this.delegateContainer.Stop && this.delegateContainer.Stop()
   }
 
   Clean () {
-    debug('Clean called')
-    if (this.delegateContainer.Clean) {
-      this.delegateContainer.Clean()
-    }
-
-    return Promise.resolve()
+    return this.delegateContainer.Clean && this.delegateContainer.Clean()
   }
 }
 

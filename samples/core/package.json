@@ -14,9 +14,6 @@
   "devDependencies": {
     "mocha": "latest",
     "botium-bindings": "latest",
-    "botium-connector-rasa": "../"
-  },
-  "dependencies": {
-    "lodash": "^4.17.11"
+    "botium-connector-rasa": "../../"
   }
 }

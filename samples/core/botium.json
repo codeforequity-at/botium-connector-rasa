@@ -1,0 +1,10 @@
+{
+  "botium": {
+    "Capabilities": {
+      "PROJECTNAME": "Botium Project Rasa Core",
+      "CONTAINERMODE": "rasa",
+      "RASA_MODE": "REST_INPUT",
+      "RASA_ENDPOINT_URL": "https://box.botium.at/rasa-demo/"
+    }
+  }
+}

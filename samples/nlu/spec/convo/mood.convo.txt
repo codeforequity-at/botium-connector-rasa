@@ -1,0 +1,8 @@
+mood
+
+#me
+How do you feel?
+
+#bot
+INTENT ask_howdoing
+INTENT_CONFIDENCE 90
