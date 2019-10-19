@@ -1,0 +1,10 @@
+product
+
+#me
+What makes core and nlu different?
+
+#bot
+INTENT ask_faq_differencecorenlu
+INTENT_CONFIDENCE 90
+ENTITIES product|...
+ENTITY_VALUES core|nlu|...
