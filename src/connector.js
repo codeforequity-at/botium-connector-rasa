@@ -1,5 +1,4 @@
 const util = require('util')
-const _ = require('lodash')
 const debug = require('debug')('botium-connector-rasa')
 
 const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
@@ -88,7 +87,7 @@ class BotiumConnectorRasa {
 
       if (this.caps[Capabilities.RASA_ENDPOINT_JWT]) {
         this.delegateCaps[CoreCapabilities.SIMPLEREST_HEADERS_TEMPLATE] = {
-          'Authorization': 'Bearer ' + this.caps[Capabilities.RASA_ENDPOINT_JWT]
+          Authorization: 'Bearer ' + this.caps[Capabilities.RASA_ENDPOINT_JWT]
         }
       }
 
@@ -101,20 +100,13 @@ class BotiumConnectorRasa {
         this.delegateCaps[CoreCapabilities.SIMPLEREST_PING_URL] = pingUrl
       }
 
-      // values delegated direct
-      _.forIn(this.caps, (value, key) => {
-        if (key.startsWith('RASA_')) {
-          this.delegateCaps[key.replace('RASA_', 'SIMPLEREST_')] = value
-        } else if (!key.startsWith('SIMPLEREST_') && key !== Capabilities.RASA_MODE) {
-          this.delegateCaps[key] = value
-        }
-      })
+      this.delegateCaps = Object.assign({}, this.caps, this.delegateCaps)
 
       debug(`Validate delegateCaps ${util.inspect(this.delegateCaps)}`)
       this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
     }
 
-    debug(`Validate delegate`)
+    debug('Validate delegate')
     return this.delegateContainer.Validate && this.delegateContainer.Validate()
   }
 
