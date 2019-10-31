@@ -1,0 +1,10 @@
+company
+
+#me
+I work for Bayer
+
+#bot
+INTENT enter_data
+INTENT_CONFIDENCE 90
+ENTITIES company|...
+ENTITY_VALUES Bayer|...

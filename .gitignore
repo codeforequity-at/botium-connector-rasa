@@ -67,3 +67,4 @@ dist
 
 package-lock.json
 yarn.lock
+*.local.json

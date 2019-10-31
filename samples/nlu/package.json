@@ -2,7 +2,8 @@
   "name": "rasa-sample",
   "version": "1.0.0",
   "scripts": {
-    "test": "mocha spec"
+    "test": "mocha spec",
+    "generate": "curl https://raw.githubusercontent.com/RasaHQ/rasa-demo/master/data/nlu/nlu.md -o nlu.md && botium-connector-rasa-cli rasaimport nlu.md"
   },
   "botium": {
     "convodirs": [
@@ -14,9 +15,6 @@
   "devDependencies": {
     "mocha": "latest",
     "botium-bindings": "latest",
-    "botium-connector-rasa": "../"
-  },
-  "dependencies": {
-    "lodash": "^4.17.11"
+    "botium-connector-rasa": "../../"
   }
 }
