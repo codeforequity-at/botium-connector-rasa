@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-rasa",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Botium Connector for Rasa",
   "main": "dist/botium-connector-rasa-cjs.js",
   "module": "dist/botium-connector-rasa-es.js",
