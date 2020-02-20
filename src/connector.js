@@ -44,9 +44,9 @@ class BotiumConnectorRasa {
           [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.*',
           [CoreCapabilities.SIMPLEREST_RESPONSE_JSONPATH]: '$.text',
           [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.image',
-          [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg }) => {
-            if (botMsg.sourceData.buttons) {
-              botMsg.buttons = botMsg.sourceData.buttons.map(b => ({ text: b.title, payload: b.payload }))
+          [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg, botMsgRoot }) => {
+            if (botMsgRoot && botMsgRoot.buttons) {
+              botMsg.buttons = botMsgRoot.buttons.map(b => ({ text: b.title, payload: b.payload }))
             }
           }
         })
