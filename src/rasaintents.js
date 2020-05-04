@@ -11,7 +11,7 @@ const helpers = require('./helpers')
 
 const getCaps = (caps) => {
   const result = caps || {}
-  result[Capabilities.CONTAINERMODE] = 'echo'
+  result[Capabilities.CONTAINERMODE] = () => ({ UserSays: () => {} })
   return result
 }
 
@@ -80,7 +80,7 @@ const importRasaIntents = async ({ caps, nlufile, buildconvos, buildentities }) 
     if (nluData[mainPointer][0] === 'header') {
       if (nluData[mainPointer][1].level === 2 && nluData[mainPointer][2].startsWith('intent:')) {
         const intentName = getPlainUtterance(nluData[mainPointer].slice(2)).split(':')[1]
-        const utterancesRef = `UTT_${slug(intentName).toUpperCase()}`
+        const utterancesRef = intentName
         const inputUtterances = []
 
         mainPointer++
@@ -205,7 +205,7 @@ module.exports = {
       })
       yargs.option('buildentities', {
         describe: 'Include entities in convo files for assertions - use --no-buildentities to disable',
-        default: true
+        default: false
       })
     },
     handler

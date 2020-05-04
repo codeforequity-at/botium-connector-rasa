@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-rasa",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Botium Connector for Rasa",
   "main": "dist/botium-connector-rasa-cjs.js",
   "module": "dist/botium-connector-rasa-es.js",
@@ -23,7 +23,7 @@
   "bugs": {
     "url": "https://github.com/codeforequity-at/botium-core/issues"
   },
-  "homepage": "https://github.com/codeforequity-at/botium-connector-rasa#readme",
+  "homepage": "https://www.botium.ai",
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/node": "^7.6.3",
@@ -51,7 +51,6 @@
     "yargs": "^14.2.0"
   },
   "peerDependencies": {
-    "botium-core": ">= 1.6.2",
-    "botium-connector-echo": ">= 0.0.4"
+    "botium-core": ">= 1.6.2"
   }
 }
