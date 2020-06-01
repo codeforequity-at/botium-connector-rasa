@@ -59,12 +59,14 @@ class BotiumConnectorRasa {
           [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg }) => {
             botMsg.nlp = {
               intent: {
+                incomprehension: true
               }
             }
             if (botMsg.sourceData.intent) {
               botMsg.nlp.intent = {
                 name: botMsg.sourceData.intent.name,
-                confidence: botMsg.sourceData.intent.confidence
+                confidence: botMsg.sourceData.intent.confidence,
+                incomprehension: false
               }
             }
             if (botMsg.sourceData.intent_ranking) {

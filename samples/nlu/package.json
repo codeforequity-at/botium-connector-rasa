@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "scripts": {
     "test": "mocha spec",
-    "generate": "curl https://raw.githubusercontent.com/RasaHQ/rasa-demo/master/data/nlu/nlu.md -o nlu.md && botium-connector-rasa-cli rasaimport nlu.md"
+    "download-rasa-sample": "curl https://raw.githubusercontent.com/RasaHQ/rasa-demo/master/data/nlu/nlu.md -o nlu.md",
+    "import-utterances": "botium-connector-rasa-cli import --no-buildconvos --output spec/imported --nlufile nlu.md",
+    "import-convos": "botium-connector-rasa-cli import --buildconvos --output spec/imported --nlufile nlu.md",
+    "import-entities": "botium-connector-rasa-cli import --buildconvos --buildentities --output spec/imported --nlufile nlu.md"
   },
   "botium": {
     "convodirs": [
-      "spec\\convo"
+      "spec/convo"
     ],
     "expandConvos": true,
     "expandUtterancesToConvos": false
