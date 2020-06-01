@@ -6,7 +6,8 @@
     "download-rasa-sample": "curl https://raw.githubusercontent.com/RasaHQ/rasa-demo/master/data/nlu/nlu.md -o nlu.md",
     "import-utterances": "botium-connector-rasa-cli import --no-buildconvos --output spec/imported --nlufile nlu.md",
     "import-convos": "botium-connector-rasa-cli import --buildconvos --output spec/imported --nlufile nlu.md",
-    "import-entities": "botium-connector-rasa-cli import --buildconvos --buildentities --output spec/imported --nlufile nlu.md"
+    "import-entities": "botium-connector-rasa-cli import --buildconvos --buildentities --output spec/imported --nlufile nlu.md",
+    "export": "botium-connector-rasa-cli export --input spec/convo"
   },
   "botium": {
     "convodirs": [

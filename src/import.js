@@ -48,16 +48,17 @@ const getPlainUtterance = (uttArray) => {
   }).join('')
 }
 
-const importIntents = async ({ caps, nlufile, buildconvos, buildentities }) => {
-  if (!fs.existsSync(nlufile)) {
-    throw new Error(`File ${nlufile} not readable`)
+const importIntents = async ({ nlufile, nlucontent, buildconvos, buildentities }) => {
+  if (nlufile) {
+    if (!fs.existsSync(nlufile)) {
+      throw new Error(`File ${nlufile} not readable`)
+    }
+    if (path.extname(nlufile) !== '.md') {
+      throw new Error(`Only markdown files (*.md) supported (${nlufile})`)
+    }
+    nlucontent = fs.readFileSync(nlufile, 'utf8')
   }
-  if (path.extname(nlufile) !== '.md') {
-    throw new Error(`Only markdown files (*.md) supported (${nlufile})`)
-  }
-
-  const nluMd = fs.readFileSync(nlufile, 'utf8')
-  const nluData = md.parse(nluMd)
+  const nluData = md.parse(nlucontent)
 
   const convos = []
   const utterances = []
@@ -145,17 +146,18 @@ const importIntents = async ({ caps, nlufile, buildconvos, buildentities }) => {
 }
 
 module.exports = {
-  importHandler: ({ caps, nlufile, buildconvos, buildentities, ...rest } = {}) => importIntents({ caps, nlufile, buildconvos, buildentities, ...rest }),
+  importHandler: ({ nlufile, nlucontent, buildconvos, buildentities, ...rest } = {}) => importIntents({ nlufile, nlucontent, buildconvos, buildentities, ...rest }),
   importArgs: {
-    caps: {
-      describe: 'Capabilities',
-      type: 'json',
-      skipCli: true
-    },
     nlufile: {
       describe: 'Specify the path to the nlu.md file of your Rasa model',
       type: 'string',
-      required: true
+      required: false
+    },
+    nlucontent: {
+      describe: 'Rasa model file content',
+      type: 'string',
+      required: false,
+      skipCli: true
     },
     buildconvos: {
       describe: 'Build convo files with intent asserters',

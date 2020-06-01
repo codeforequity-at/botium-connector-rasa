@@ -4,7 +4,7 @@
       "PROJECTNAME": "Botium Project Rasa NLU",
       "CONTAINERMODE": "rasa",
       "RASA_MODE": "NLU_INPUT",
-      "RASA_ENDPOINT_URL": "https://box.botium.at/rasa-demo/"
+      "RASA_ENDPOINT_URL": "https://demo.botiumbox.com/rasa-demo/"
     }
   }
 }
