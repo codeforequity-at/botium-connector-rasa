@@ -13,7 +13,7 @@ __Did you read the [Botium in a Nutshell](https://medium.com/@floriantreml/botiu
 ## How it works
 Botium connects to your Rasa chatbot either to [Rasa Core](https://rasa.com/docs/rasa/user-guide/connectors/your-own-website/) or to [Rasa NLU](https://rasa.com/docs/rasa/api/http-api/) directly.
 
-When connecting to Rasa Core, Botium can test dialogues. When connecting to Rasa NLU, Botium can test the NLU functions only with the [Botium NLP Asserters](https://botium.atlassian.net/wiki/spaces/BOTIUM/pages/17334319/NLP+Asserter+Intents+Entities+Confidence)
+When connecting to Rasa Core, Botium can test the conversational flow. When connecting to Rasa NLU, Botium can test the NLU functions only with the [Botium NLP Asserters](https://botium.atlassian.net/wiki/spaces/BOTIUM/pages/17334319/NLP+Asserter+Intents+Entities+Confidence)
 
 It can be used as any other Botium connector with all Botium Stack components:
 * [Botium CLI](https://github.com/codeforequity-at/botium-cli/)
@@ -88,30 +88,23 @@ This connector provides a CLI interface for importing convos and utterances from
 
 You can either run the CLI with botium-cli (it is integrated there), or directly from this connector (see samples/nlu/package.json for an example):
 
-    > botium-connector-rasa-cli rasaimport path-to-my-nlu.md
+    > botium-connector-rasa-cli import --nlufile path-to-my-nlu.md
 
 _Please note that a botium-core installation is required_
 
 For getting help on the available CLI options and switches, run:
 
-    > botium-connector-rasa-cli rasaimport --help
+    > botium-connector-rasa-cli --help
 
 ## How to start sample
 
 There are two samples available in the [samples](./samples) folder. Both of them are based on [Sara - the Rasa Demo Bot](https://github.com/RasaHQ/rasa-demo). Adapt the botium.json in these directories with your own Rasa Demo installation.
 
-You can start the Rasa Core sample with these commands:
+You can start the samples with these commands:
 
 ```
 > cd ./samples/core
 > npm install && npm test
-```
-
-For the Rasa NLU samples, first the _nlu.md_ file from the Sara github repository is downloaded and the test cases are generated out of it.
-
-```
-> cd ./samples/nlu
-> npm install && npm generate && npm test
 ```
 
 ## Supported Capabilities
