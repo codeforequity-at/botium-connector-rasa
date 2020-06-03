@@ -29,6 +29,7 @@ class BotiumConnectorRasa {
 
     this.caps = Object.assign({}, Defaults, this.caps)
 
+    if (!this.caps[Capabilities.RASA_ENDPOINT_URL]) throw new Error('RASA_ENDPOINT_URL capability is required')
     if (this.caps[Capabilities.RASA_MODE] !== 'REST_INPUT' && this.caps[Capabilities.RASA_MODE] !== 'NLU_INPUT') throw new Error('RASA_MODE capability either REST_INPUT or NLU_INPUT')
 
     this.delegateCaps = {}
