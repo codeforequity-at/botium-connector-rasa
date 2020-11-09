@@ -70,6 +70,12 @@ class BotiumConnectorRasa {
                 incomprehension: false
               }
             }
+            if (!botMsg.nlp.intent) {
+              botMsg.nlp.intent = { incomprehension: true }
+            } else if (!botMsg.nlp.intent.name || botMsg.nlp.intent.name.toLowerCase() === 'none') {
+              botMsg.nlp.intent.incomprehension = true
+            }
+
             if (botMsg.sourceData.intent_ranking) {
               botMsg.nlp.intent.intents = botMsg.sourceData.intent_ranking.map(i => ({ name: i.name, confidence: i.confidence }))
             }
