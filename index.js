@@ -38,7 +38,8 @@ module.exports = {
         type: 'choice',
         required: false,
         choices: [
-          { key: 'REST_INPUT', name: 'Rasa Core (dialogue engine)' },
+          { key: 'DIALOG_AND_NLU', name: 'Rasa dialogue and NLU engine' },
+          { key: 'REST_INPUT', name: 'Rasa Core (dialogue engine only)' },
           { key: 'NLU_INPUT', name: 'Rasa NLU (NLU engine only)' }
         ]
       },

@@ -3,7 +3,7 @@
     "Capabilities": {
       "PROJECTNAME": "Botium Project Rasa Core",
       "CONTAINERMODE": "rasa",
-      "RASA_MODE": "REST_INPUT",
+      "RASA_MODE": "DIALOG_AND_NLU",
       "RASA_ENDPOINT_URL": "https://demo.botiumbox.com/rasa-demo/"
     }
   }
