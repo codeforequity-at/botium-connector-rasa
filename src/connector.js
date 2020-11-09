@@ -74,7 +74,6 @@ class BotiumConnectorRasa {
       const allCaps = Object.assign({}, this.caps, delegateCaps)
       debug(`Validate REST_INPUT delegateCaps ${util.inspect(delegateCaps)}`)
       this.delegateContainers.push(new SimpleRestContainer({ queueBotSays: (botMsg) => this.queueListener && this.queueListener(botMsg), caps: allCaps }))
-
     }
     if (this.caps[Capabilities.RASA_MODE] === 'DIALOG_AND_NLU' || this.caps[Capabilities.RASA_MODE] === 'NLU_INPUT') {
       const delegateCaps = {}
@@ -96,16 +95,11 @@ class BotiumConnectorRasa {
               incomprehension: false
             }
           }
-            if (!botMsg.nlp.intent) {
-              botMsg.nlp.intent = { incomprehension: true }
-            } else if (!botMsg.nlp.intent.name || botMsg.nlp.intent.name.toLowerCase() === 'none') {
-              botMsg.nlp.intent.incomprehension = true
-            }
-          if (botMsg.sourceData.intent_ranking) {
-            botMsg.nlp.intent.intents = botMsg.sourceData.intent_ranking.map(i => ({ name: i.name, confidence: i.confidence }))
+          if (!botMsg.nlp.intent) {
+            botMsg.nlp.intent = { incomprehension: true }
+          } else if (!botMsg.nlp.intent.name || botMsg.nlp.intent.name.toLowerCase() === 'none') {
+            botMsg.nlp.intent.incomprehension = true
           }
-          if (botMsg.sourceData.entities) {
-            botMsg.nlp.entities = botMsg.sourceData.entities.map(e => ({ name: e.entity, value: e.value, confidence: e.confidence }))
           if (botMsg.sourceData.intent_ranking) {
             botMsg.nlp.intent.intents = botMsg.sourceData.intent_ranking.map(i => ({ name: i.name, confidence: i.confidence }))
           }
