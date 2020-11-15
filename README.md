@@ -115,13 +115,16 @@ Set the capability __CONTAINERMODE__ to __rasa__ to activate this connector.
 Rasa endpoint URL.
 
 ### RASA_MODE
-_Default: REST\_INPUT_
+_Default: DIALOG\_AND\_NLUT_
 
 **REST_INPUT for using Rasa Core**
 The Rasa endpoint URL is extended with /webhooks/rest/webhook for posting the Botium requests.
 
 **NLU_INPUT for using Rasa NLU**
 The Rasa endpoint URL is extended with /model/parse for posting the Botium requests.
+
+**DIALOG_AND_NLU**
+Combining Rasa dialogue and NLU engine endpoints
 
 ### RASA_ENDPOINT_PING_URL
 _Default: endpoint URL/version_
