@@ -7,17 +7,35 @@ const md = require('markdown').markdown
 const getEntityAsserters = (uttArray) => {
   const entities = {}
 
-  uttArray.filter(u => _.isArray(u) && u[0] === 'link').forEach(u => {
-    const href = u[1].href
-    let entityName = href
-    let entityValue = u[2]
+  uttArray.forEach((u, uindex) => {
+    let entityName = null
+    let entityValue = null
 
-    if (href.split(':').length === 2) {
-      entityName = href.split(':')[0]
-      entityValue = href.split(':')[1]
+    if (_.isArray(u) && u[0] === 'link') {
+      const href = u[1].href
+      entityName = href
+      entityValue = u[2]
+
+      if (href.split(':').length === 2) {
+        entityName = href.split(':')[0]
+        entityValue = href.split(':')[1]
+      }
     }
-    entities[entityName] = entities[entityName] || []
-    entities[entityName].push(entityValue)
+    if (_.isArray(u) && u[0] === 'link_ref' && uindex < uttArray.length - 1) {
+      let entityTag = null
+      try {
+        entityTag = JSON.parse(uttArray[uindex + 1])
+      } catch (err) {
+      }
+      if (entityTag && entityTag.entity) {
+        entityName = entityTag.entity
+        entityValue = entityTag.value || u[2]
+      }
+    }
+    if (entityName && entityValue) {
+      entities[entityName] = entities[entityName] || []
+      entities[entityName].push(entityValue)
+    }
   })
   if (Object.keys(entities).length === 0) return []
 
@@ -34,10 +52,14 @@ const getEntityAsserters = (uttArray) => {
 }
 
 const getPlainUtterance = (uttArray) => {
-  return uttArray.map(u => {
+  return uttArray.map((u, uindex) => {
+    if (uindex > 0 && _.isArray(uttArray[uindex - 1]) && uttArray[uindex - 1][0] === 'link_ref') return ''
     if (_.isString(u)) return u
     if (_.isArray(u)) {
       if (u[0] === 'link') {
+        return u[2]
+      }
+      if (u[0] === 'link_ref') {
         return u[2]
       }
       if (u[0] === 'em') {
