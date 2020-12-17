@@ -1,0 +1,10 @@
+thanks
+
+#me
+thanks
+
+#bot
+INTENT thank
+
+#bot
+Is there anything else I can help you with?

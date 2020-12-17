@@ -21,8 +21,11 @@ class BotiumConnectorRasa {
   constructor ({ queueBotSays, caps }) {
     this.queueBotSays = queueBotSays
     this.caps = caps
-    this.delegateContainers = []
-    this.queueListener = null
+    this.delegateContainerCore = null
+    this.delegateContainerNLU = null
+    this.queueListenerCore = null
+    this.queueListenerNLU = null
+    this.queue = null
   }
 
   Validate () {
@@ -32,8 +35,6 @@ class BotiumConnectorRasa {
 
     if (!this.caps[Capabilities.RASA_ENDPOINT_URL]) throw new Error('RASA_ENDPOINT_URL capability is required')
     if (this.caps[Capabilities.RASA_MODE] !== 'DIALOG_AND_NLU' && this.caps[Capabilities.RASA_MODE] !== 'REST_INPUT' && this.caps[Capabilities.RASA_MODE] !== 'NLU_INPUT') throw new Error('RASA_MODE capability either DIALOG_AND_NLU, REST_INPUT or NLU_INPUT')
-
-    this.delegateContainers = []
 
     const getRasaUrl = (endpointPathName) => {
       let url = this.caps[Capabilities.RASA_ENDPOINT_URL]
@@ -73,7 +74,7 @@ class BotiumConnectorRasa {
       }
       const allCaps = Object.assign({}, this.caps, delegateCaps)
       debug(`Validate REST_INPUT delegateCaps ${util.inspect(delegateCaps)}`)
-      this.delegateContainers.push(new SimpleRestContainer({ queueBotSays: (botMsg) => this.queueListener && this.queueListener(botMsg), caps: allCaps }))
+      this.delegateContainerCore = new SimpleRestContainer({ queueBotSays: (botMsg) => this._pushToCoreQueue(botMsg), caps: allCaps })
     }
     if (this.caps[Capabilities.RASA_MODE] === 'DIALOG_AND_NLU' || this.caps[Capabilities.RASA_MODE] === 'NLU_INPUT') {
       const delegateCaps = {}
@@ -116,72 +117,118 @@ class BotiumConnectorRasa {
 
       const allCaps = Object.assign({}, this.caps, delegateCaps)
       debug(`Validate NLU_INPUT delegateCaps ${util.inspect(delegateCaps)}`)
-      this.delegateContainers.push(new SimpleRestContainer({ queueBotSays: (botMsg) => this.queueListener && this.queueListener(botMsg), caps: allCaps }))
+      this.delegateContainerNLU = new SimpleRestContainer({ queueBotSays: (botMsg) => this._pushToNLUQueue(botMsg), caps: allCaps })
     }
-    return Promise.all(this.delegateContainers.map(dc => dc.Validate && dc.Validate()))
+    return Promise.all([this.delegateContainerCore, this.delegateContainerNLU].map(dc => dc && dc.Validate && dc.Validate()))
   }
 
   Build () {
-    return Promise.all(this.delegateContainers.map(dc => dc.Build && dc.Build()))
+    return Promise.all([this.delegateContainerCore, this.delegateContainerNLU].map(dc => dc && dc.Build && dc.Build()))
   }
 
   Start () {
-    return Promise.all(this.delegateContainers.map(dc => dc.Start && dc.Start()))
+    return Promise.all([this.delegateContainerCore, this.delegateContainerNLU].map(dc => dc && dc.Start && dc.Start()))
   }
 
   async UserSays (msg) {
     debug('UserSays called')
 
-    const botMsgs = []
-    for (const delegateContainer of this.delegateContainers) {
-      const botMsg = await this._waitForResponse(delegateContainer, msg)
-      if (_.isError(botMsg)) throw botMsg
-      else botMsgs.push(botMsg)
-    }
-    setImmediate(() => {
-      if (botMsgs.length === 1) {
-        return this.queueBotSays(botMsgs[0])
-      }
+    this.queue = null
+    this.queueListenerCore = null
+    this.queueListenerNLU = null
 
-      debug(`UserSays combinding ${botMsgs.length} Rasa responses (Dialogue and NLU engine)`)
-      const botMsgCombined = { sourceData: [] }
-      for (const botMsg of botMsgs) {
-        if (botMsg.messageText) {
-          botMsgCombined.messageText = botMsg.messageText
-        }
-        if (botMsg.buttons) {
-          botMsgCombined.buttons = botMsg.buttons
-        }
-        if (botMsg.sourceData) {
-          if (_.isArray(botMsg.sourceData)) {
-            botMsgCombined.sourceData = botMsgCombined.sourceData.concat(botMsg.sourceData)
-          } else {
-            botMsgCombined.sourceData.push(botMsg.sourceData)
+    if (this.caps[Capabilities.RASA_MODE] === 'REST_INPUT') {
+      return this.delegateContainerCore.UserSays(msg)
+    } else if (this.caps[Capabilities.RASA_MODE] === 'NLU_INPUT') {
+      return this.delegateContainerNLU.UserSays(msg)
+    } else if (this.caps[Capabilities.RASA_MODE] === 'DIALOG_AND_NLU') {
+      this.queue = []
+
+      const botMsgNLU = await this._waitForResponseNLU(msg)
+      if (_.isError(botMsgNLU)) throw botMsgNLU
+
+      const botMsgCore = await this._waitForResponseCore(msg)
+      if (_.isError(botMsgCore)) throw botMsgCore
+
+      const botMsgs = [botMsgCore, botMsgNLU]
+
+      setImmediate(() => {
+        debug(`UserSays combinding ${botMsgs.length} Rasa responses (Dialogue and NLU engine)`)
+        const botMsgCombined = { sourceData: [] }
+        for (const botMsg of botMsgs) {
+          if (botMsg.messageText) {
+            botMsgCombined.messageText = botMsg.messageText
+          }
+          if (botMsg.buttons) {
+            botMsgCombined.buttons = botMsg.buttons
+          }
+          if (botMsg.sourceData) {
+            if (_.isArray(botMsg.sourceData)) {
+              botMsgCombined.sourceData = botMsgCombined.sourceData.concat(botMsg.sourceData)
+            } else {
+              botMsgCombined.sourceData.push(botMsg.sourceData)
+            }
+          }
+          if (botMsg.nlp) {
+            botMsgCombined.nlp = botMsg.nlp
           }
         }
-        if (botMsg.nlp) {
-          botMsgCombined.nlp = botMsg.nlp
-        }
-      }
-      this.queueBotSays(botMsgCombined)
-    })
+        this.queueBotSays(botMsgCombined)
+        this.queue.forEach(botMsg => setImmediate(() => this.queueBotSays(botMsg)))
+        this.queue = null
+        this.queueListenerCore = null
+        this.queueListenerNLU = null
+      })
+    }
   }
 
   Stop () {
-    return Promise.all(this.delegateContainers.map(dc => dc.Stop && dc.Stop()))
+    return Promise.all([this.delegateContainerCore, this.delegateContainerNLU].map(dc => dc && dc.Stop && dc.Stop()))
   }
 
   Clean () {
-    return Promise.all(this.delegateContainers.map(dc => dc.Clean && dc.Clean()))
+    return Promise.all([this.delegateContainerCore, this.delegateContainerNLU].map(dc => dc && dc.Clean && dc.Clean()))
   }
 
-  async _waitForResponse (delegateContainer, msg) {
+  _pushToCoreQueue (botMsg) {
+    if (this.queueListenerCore) {
+      return this.queueListenerCore(botMsg)
+    }
+    if (_.isNil(this.queue)) {
+      setImmediate(() => this.queueBotSays(botMsg))
+    } else {
+      this.queue.push(botMsg)
+    }
+  }
+
+  _pushToNLUQueue (botMsg) {
+    if (this.queueListenerNLU) {
+      return this.queueListenerNLU(botMsg)
+    }
+    if (_.isNil(this.queue)) {
+      setImmediate(() => this.queueBotSays(botMsg))
+    } else {
+      this.queue.push(botMsg)
+    }
+  }
+
+  async _waitForResponseCore (msg) {
     return new Promise((resolve, reject) => {
-      this.queueListener = (botMsg) => {
-        this.queueListener = null
+      this.queueListenerCore = (botMsg) => {
+        this.queueListenerCore = null
         resolve(botMsg)
       }
-      delegateContainer.UserSays(msg).catch(reject)
+      this.delegateContainerCore.UserSays(msg).catch(reject)
+    })
+  }
+
+  async _waitForResponseNLU (msg) {
+    return new Promise((resolve, reject) => {
+      this.queueListenerNLU = (botMsg) => {
+        this.queueListenerNLU = null
+        resolve(botMsg)
+      }
+      this.delegateContainerNLU.UserSays(msg).catch(reject)
     })
   }
 }
