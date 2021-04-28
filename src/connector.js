@@ -10,11 +10,13 @@ const Capabilities = {
   RASA_ENDPOINT_URL: 'RASA_ENDPOINT_URL',
   RASA_ENDPOINT_PING_URL: 'RASA_ENDPOINT_PING_URL',
   RASA_ENDPOINT_TOKEN: 'RASA_ENDPOINT_TOKEN',
-  RASA_ENDPOINT_JWT: 'RASA_ENDPOINT_JWT'
+  RASA_ENDPOINT_JWT: 'RASA_ENDPOINT_JWT',
+  RASA_ENDPOINT_TIMEOUT: 'RASA_ENDPOINT_TIMEOUT'
 }
 
 const Defaults = {
-  [Capabilities.RASA_MODE]: 'DIALOG_AND_NLU'
+  [Capabilities.RASA_MODE]: 'DIALOG_AND_NLU',
+  [Capabilities.RASA_ENDPOINT_TIMEOUT]: 10000
 }
 
 class BotiumConnectorRasa {
@@ -51,6 +53,7 @@ class BotiumConnectorRasa {
 
       Object.assign(delegateCaps, {
         [CoreCapabilities.SIMPLEREST_URL]: getRasaUrl('webhooks/rest/webhook'),
+        [CoreCapabilities.SIMPLEREST_TIMEOUT]: this.caps[Capabilities.RASA_ENDPOINT_TIMEOUT],
         [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
         [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "message": "{{msg.messageText}}", "sender": "{{botium.conversationId}}" }',
         [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.*',
@@ -81,6 +84,7 @@ class BotiumConnectorRasa {
 
       Object.assign(delegateCaps, {
         [CoreCapabilities.SIMPLEREST_URL]: getRasaUrl('model/parse'),
+        [CoreCapabilities.SIMPLEREST_TIMEOUT]: this.caps[Capabilities.RASA_ENDPOINT_TIMEOUT],
         [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
         [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "text": "{{msg.messageText}}" }',
         [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg }) => {
