@@ -2,8 +2,7 @@ const util = require('util')
 const _ = require('lodash')
 const debug = require('debug')('botium-connector-rasa')
 
-const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
-const CoreCapabilities = require('botium-core/src/Capabilities')
+const { Capabilities: CoreCapabilities, Lib: { SimpleRestContainer } } = require('botium-core')
 
 const Capabilities = {
   RASA_MODE: 'RASA_MODE',
@@ -59,6 +58,7 @@ class BotiumConnectorRasa {
         [CoreCapabilities.SIMPLEREST_BODY_JSONPATH]: '$.*',
         [CoreCapabilities.SIMPLEREST_RESPONSE_JSONPATH]: '$.text',
         [CoreCapabilities.SIMPLEREST_MEDIA_JSONPATH]: '$.image',
+        [CoreCapabilities.SIMPLEREST_IGNORE_EMPTY]: false,
         [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg, botMsgRoot }) => {
           if (botMsgRoot && botMsgRoot.buttons) {
             botMsg.buttons = botMsgRoot.buttons.map(b => ({ text: b.title, payload: b.payload }))
@@ -87,6 +87,7 @@ class BotiumConnectorRasa {
         [CoreCapabilities.SIMPLEREST_TIMEOUT]: this.caps[Capabilities.RASA_ENDPOINT_TIMEOUT],
         [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
         [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "text": "{{msg.messageText}}" }',
+        [CoreCapabilities.SIMPLEREST_IGNORE_EMPTY]: false,
         [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg }) => {
           botMsg.nlp = {
             intent: {
@@ -148,13 +149,10 @@ class BotiumConnectorRasa {
     } else if (this.caps[Capabilities.RASA_MODE] === 'DIALOG_AND_NLU') {
       this.queue = []
 
-      const botMsgNLU = await this._waitForResponseNLU(msg)
-      if (_.isError(botMsgNLU)) throw botMsgNLU
-
-      const botMsgCore = await this._waitForResponseCore(msg)
-      if (_.isError(botMsgCore)) throw botMsgCore
-
-      const botMsgs = [botMsgCore, botMsgNLU]
+      const botMsgs = await Promise.all([this._waitForResponseNLU(msg), this._waitForResponseCore(msg)])
+      for (const botMsg of botMsgs) {
+        if (_.isError(botMsg)) throw botMsg
+      }
 
       setImmediate(() => {
         debug(`UserSays combinding ${botMsgs.length} Rasa responses (Dialogue and NLU engine)`)
