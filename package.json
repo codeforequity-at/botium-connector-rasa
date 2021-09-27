@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-rasa",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Botium Connector for Rasa",
   "main": "dist/botium-connector-rasa-cjs.js",
   "module": "dist/botium-connector-rasa-es.js",
@@ -26,30 +26,32 @@
   },
   "homepage": "https://www.botium.ai",
   "devDependencies": {
-    "@babel/core": "^7.14.3",
-    "@babel/node": "^7.14.2",
-    "@babel/plugin-transform-runtime": "^7.14.3",
-    "@babel/preset-env": "^7.14.4",
-    "eslint": "^7.27.0",
+    "@babel/core": "^7.15.5",
+    "@babel/node": "^7.15.4",
+    "@babel/plugin-transform-runtime": "^7.15.0",
+    "@babel/preset-env": "^7.15.6",
+    "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.23.3",
+    "eslint-plugin-import": "^2.24.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-standard": "^5.0.0",
-    "rollup": "^2.50.4",
+    "rollup": "^2.57.0",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^5.2.0"
   },
   "dependencies": {
-    "@babel/runtime": "^7.14.0",
-    "debug": "^4.3.1",
+    "@babel/runtime": "^7.15.4",
+    "debug": "^4.3.2",
     "lodash": "^4.17.21",
     "markdown": "^0.5.0",
     "mkdirp": "^1.0.4",
-    "slug": "^5.0.1",
-    "yargs": "^17.0.1"
+    "slug": "^5.1.0",
+    "write-yaml": "^1.0.0",
+    "yaml": "^1.10.2",
+    "yargs": "^17.2.1"
   },
   "peerDependencies": {
     "botium-core": ">= 1.9.2"

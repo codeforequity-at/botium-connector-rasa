@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "scripts": {
     "test": "mocha spec",
-    "download-rasa-sample": "curl https://raw.githubusercontent.com/RasaHQ/rasa-demo/master/data/nlu/nlu.md -o nlu.md",
-    "import-utterances": "botium-connector-rasa-cli import --no-buildconvos --output spec/imported --nlufile nlu.md",
-    "import-convos": "botium-connector-rasa-cli import --buildconvos --output spec/imported --nlufile nlu.md",
-    "import-entities": "botium-connector-rasa-cli import --buildconvos --buildentities --output spec/imported --nlufile nlu.md",
+    "download-rasa-sample": "curl https://raw.githubusercontent.com/RasaHQ/rasa-demo/main/data/nlu/nlu.yml -o nlu.yml",
+    "import-utterances": "botium-connector-rasa-cli import --no-buildconvos --output spec/imported --nlufile nlu.yml",
+    "import-convos": "botium-connector-rasa-cli import --buildconvos --output spec/imported --nlufile nlu.yml",
+    "import-entities": "botium-connector-rasa-cli import --buildconvos --buildentities --output spec/imported --nlufile nlu.yml",
+    "import-utterances-md": "botium-connector-rasa-cli import --no-buildconvos --output spec/imported --nlufile nlu.md",
+    "import-convos-md": "botium-connector-rasa-cli import --buildconvos --output spec/imported --nlufile nlu.md",
+    "import-entities-md": "botium-connector-rasa-cli import --buildconvos --buildentities --output spec/imported --nlufile nlu.md",
     "export": "botium-connector-rasa-cli export --input spec/convo"
   },
   "botium": {

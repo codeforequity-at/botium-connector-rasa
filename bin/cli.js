@@ -99,7 +99,7 @@ yargsCmd.usage('Botium Connector Rasa CLI\n\nUsage: $0 [options]') // eslint-dis
       yargs.option('output', {
         describe: 'Output file',
         type: 'string',
-        default: 'nlu-botium.md'
+        default: 'nlu-botium.yml'
       })
     },
     handler: async (argv) => {

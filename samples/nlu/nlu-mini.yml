@@ -1,0 +1,33 @@
+version: "2.0"
+
+nlu:
+- intent: greet
+  examples: |
+    - Hey
+    - Hi
+    - hey there [Sara](name)
+
+- intent: faq/language
+  examples: |
+    - What language do you speak?
+    - Do you only handle english?
+
+- intent: check_balance
+  examples: |
+    - how much do I have on my [savings](account) account
+    - how much money is in my [checking]({"entity": "account"}) account
+    - What's the balance on my [credit card account]{"entity":"account","value":"credit"}
+
+stories:
+- story: greet and faq
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: faq
+  - action: utter_faq
+
+rules:
+- rule: Greet user
+  steps:
+  - intent: greet
+  - action: utter_greet

@@ -1,0 +1,8 @@
+version: "2.0"
+
+nlu:
+- intent: UTT_MOOD
+  examples: |
+    - I'm great! Thanks for asking.
+    - I'm good, thanks!
+    - A little bit too warm, otherwise fine.

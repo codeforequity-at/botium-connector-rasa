@@ -3,6 +3,8 @@ const fs = require('fs')
 const slug = require('slug')
 const _ = require('lodash')
 const md = require('markdown').markdown
+const YAML = require('yaml')
+const debug = require('debug')('botium-connector-rasa')
 
 const getEntityAsserters = (uttArray) => {
   const entities = {}
@@ -70,108 +72,168 @@ const getPlainUtterance = (uttArray) => {
   }).join('')
 }
 
-const importIntents = async ({ nlufile, nlucontent, buildconvos, buildentities }) => {
+const resolveLinkHrefs = (uttArray) => uttArray.reduce((r, u, uindex) => {
+  if (uindex > 0 && _.isArray(uttArray[uindex - 1]) && uttArray[uindex - 1][0] === 'link_ref') {
+    if (u.startsWith('({')) {
+      const endPara = u.indexOf('})')
+      if (endPara > 0) {
+        return [...r, u.substring(1, endPara + 1), u.substring(endPara + 2)]
+      }
+    }
+    if (u.startsWith('{')) {
+      const endPara = u.indexOf('}')
+      if (endPara > 0) {
+        return [...r, u.substring(0, endPara + 1), u.substring(endPara + 1)]
+      }
+    }
+  }
+  return [...r, u]
+}, [])
+
+const importIntents = async ({ nlufile, nlucontent, buildconvos, buildentities }, { statusCallback }) => {
+  const status = (log, obj) => {
+    debug(log, obj)
+    if (statusCallback) statusCallback(log, obj)
+  }
+
   if (nlufile) {
     if (!fs.existsSync(nlufile)) {
       throw new Error(`File ${nlufile} not readable`)
     }
-    if (path.extname(nlufile) !== '.md') {
-      throw new Error(`Only markdown files (*.md) supported (${nlufile})`)
+    if (path.extname(nlufile) !== '.yml' && path.extname(nlufile) !== '.yaml' && path.extname(nlufile) !== '.md') {
+      throw new Error(`Only YAML files (*.yaml, *.yml) and Markdown files (*.md) supported (${nlufile})`)
     }
     nlucontent = fs.readFileSync(nlufile, 'utf8')
   }
-  const nluData = md.parse(nlucontent)
 
   const convos = []
   const utterances = []
 
-  let mainPointer = 0
-  while (true) {
-    if (mainPointer >= nluData.length) break
+  const handleMarkdownIntent = (intentName, uttList) => {
+    const inputUtterances = []
+    if (uttList && uttList[0] === 'bulletlist') {
+      for (const uttItem of uttList.slice(1).filter(u => u[0] === 'listitem')) {
+        const utt = getPlainUtterance(resolveLinkHrefs(uttItem.slice(1)))
+        inputUtterances.push(utt)
 
-    if (nluData[mainPointer][0] === 'header') {
-      if (nluData[mainPointer][1].level === 2 && nluData[mainPointer][2].startsWith('intent:')) {
-        const intentName = getPlainUtterance(nluData[mainPointer].slice(2)).split(':')[1]
-        const utterancesRef = intentName
-        const inputUtterances = []
-
-        mainPointer++
-        if (nluData[mainPointer][0] === 'bulletlist') {
-          for (const uttItem of nluData[mainPointer].slice(1).filter(u => u[0] === 'listitem')) {
-            const utt = getPlainUtterance(uttItem.slice(1))
-            inputUtterances.push(utt)
-
-            if (buildentities) {
-              const entityAsserters = getEntityAsserters(uttItem.slice(1))
-              if (entityAsserters && entityAsserters.length > 0) {
-                const convo = {
-                  header: {
-                    name: intentName + '_' + slug(utt)
-                  },
-                  conversation: [
+        if (buildentities) {
+          const entityAsserters = getEntityAsserters(resolveLinkHrefs(uttItem.slice(1)))
+          if (entityAsserters && entityAsserters.length > 0) {
+            const convo = {
+              header: {
+                name: intentName + '_' + slug(utt)
+              },
+              conversation: [
+                {
+                  sender: 'me',
+                  messageText: utt
+                },
+                {
+                  sender: 'bot',
+                  asserters: [
                     {
-                      sender: 'me',
-                      messageText: utt
-                    },
-                    {
-                      sender: 'bot',
-                      asserters: [
-                        {
-                          name: 'INTENT',
-                          args: [intentName]
-                        }
-                      ].concat(entityAsserters)
+                      name: 'INTENT',
+                      args: [intentName]
                     }
-                  ]
+                  ].concat(entityAsserters)
                 }
-                convos.push(convo)
-              }
+              ]
             }
+            convos.push(convo)
           }
         }
-
-        if (buildconvos) {
-          const convo = {
-            header: {
-              name: intentName
-            },
-            conversation: [
+      }
+    }
+    if (buildconvos) {
+      const convo = {
+        header: {
+          name: intentName
+        },
+        conversation: [
+          {
+            sender: 'me',
+            messageText: intentName
+          },
+          {
+            sender: 'bot',
+            asserters: [
               {
-                sender: 'me',
-                messageText: utterancesRef
-              },
-              {
-                sender: 'bot',
-                asserters: [
-                  {
-                    name: 'INTENT',
-                    args: [intentName]
-                  }
-                ]
+                name: 'INTENT',
+                args: [intentName]
               }
             ]
           }
-          convos.push(convo)
-        }
+        ]
+      }
+      convos.push(convo)
+    }
 
-        utterances.push({
-          name: utterancesRef,
-          utterances: inputUtterances
-        })
-        continue
+    utterances.push({
+      name: intentName,
+      utterances: inputUtterances
+    })
+  }
+
+  let yamlData = null
+  let yamlErr = null
+  let mdData = null
+  let mdErr = null
+
+  try {
+    const data = YAML.parse(nlucontent)
+    if (data && data.nlu) {
+      yamlData = data
+    }
+  } catch (err) {
+    yamlErr = err
+  }
+  if (!yamlData) {
+    try {
+      mdData = md.parse(nlucontent)
+    } catch (err) {
+      mdErr = err
+    }
+  }
+  if (!yamlData && !mdData) {
+    if (yamlErr) status(`YAML parsing failure: ${yamlErr.message}`)
+    if (mdErr) status(`Markdown parsing failure: ${mdErr.message}`)
+    throw new Error('Failed to read Rasa file, neither YAML nor MD recognized')
+  }
+
+  if (yamlData) {
+    for (const intentData of yamlData.nlu) {
+      if (intentData.intent) {
+        const intentName = intentData.intent.split('/').length > 1 ? intentData.intent.split('/')[0] : intentData.intent
+        const uttList = md.parse(intentData.examples)[1]
+        handleMarkdownIntent(intentName, uttList)
       }
     }
-    mainPointer++
+  } else if (mdData) {
+    let mainPointer = 0
+    while (true) {
+      if (mainPointer >= mdData.length) break
+
+      if (mdData[mainPointer][0] === 'header') {
+        if (mdData[mainPointer][1].level === 2 && mdData[mainPointer][2].startsWith('intent:')) {
+          const intentName = getPlainUtterance(resolveLinkHrefs(mdData[mainPointer].slice(2))).split(':')[1]
+
+          mainPointer++
+          handleMarkdownIntent(intentName, mdData[mainPointer])
+          continue
+        }
+      }
+      mainPointer++
+    }
   }
 
   return { convos, utterances }
 }
 
 module.exports = {
-  importHandler: ({ nlufile, nlucontent, buildconvos, buildentities, ...rest } = {}) => importIntents({ nlufile, nlucontent, buildconvos, buildentities, ...rest }),
+  importHandler: ({ nlufile, nlucontent, buildconvos, buildentities, ...rest } = {}, { statusCallback } = {}) => importIntents({ nlufile, nlucontent, buildconvos, buildentities, ...rest }, { statusCallback }),
   importArgs: {
     nlufile: {
-      describe: 'Specify the path to the nlu.md file of your Rasa model',
+      describe: 'Specify the path to the nlu file of your Rasa model (*.yaml, *.yml, *.md)',
       type: 'string',
       required: false
     },
