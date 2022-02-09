@@ -44,6 +44,20 @@ module.exports = {
         ]
       },
       {
+        name: 'RASA_REST_ENDPOINT_PATH',
+        label: 'Rest endpoint path',
+        description: 'By default it is \'webhooks/rest/webhook\'',
+        type: 'string',
+        required: false
+      },
+      {
+        name: 'RASA_NLU_ENDPOINT_PATH',
+        label: 'NLU endpoint path',
+        description: 'By default it is \'model/parse\'',
+        type: 'string',
+        required: false
+      },
+      {
         name: 'RASA_ENDPOINT_PING_URL',
         label: 'HTTP(S) endpoint to ping before start',
         type: 'url',
