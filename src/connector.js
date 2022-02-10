@@ -7,6 +7,8 @@ const { Capabilities: CoreCapabilities, Lib: { SimpleRestContainer } } = require
 const Capabilities = {
   RASA_MODE: 'RASA_MODE',
   RASA_ENDPOINT_URL: 'RASA_ENDPOINT_URL',
+  RASA_REST_ENDPOINT_PATH: 'RASA_REST_ENDPOINT_PATH',
+  RASA_NLU_ENDPOINT_PATH: 'RASA_NLU_ENDPOINT_PATH',
   RASA_ENDPOINT_PING_URL: 'RASA_ENDPOINT_PING_URL',
   RASA_ENDPOINT_TOKEN: 'RASA_ENDPOINT_TOKEN',
   RASA_ENDPOINT_JWT: 'RASA_ENDPOINT_JWT',
@@ -51,7 +53,7 @@ class BotiumConnectorRasa {
       const delegateCaps = {}
 
       Object.assign(delegateCaps, {
-        [CoreCapabilities.SIMPLEREST_URL]: getRasaUrl('webhooks/rest/webhook'),
+        [CoreCapabilities.SIMPLEREST_URL]: getRasaUrl(this.caps[Capabilities.RASA_REST_ENDPOINT_PATH] || 'webhooks/rest/webhook'),
         [CoreCapabilities.SIMPLEREST_TIMEOUT]: this.caps[Capabilities.RASA_ENDPOINT_TIMEOUT],
         [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
         [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "message": "{{msg.messageText}}", "sender": "{{botium.conversationId}}" }',
@@ -83,7 +85,7 @@ class BotiumConnectorRasa {
       const delegateCaps = {}
 
       Object.assign(delegateCaps, {
-        [CoreCapabilities.SIMPLEREST_URL]: getRasaUrl('model/parse'),
+        [CoreCapabilities.SIMPLEREST_URL]: getRasaUrl(this.caps[Capabilities.RASA_NLU_ENDPOINT_PATH] || 'model/parse'),
         [CoreCapabilities.SIMPLEREST_TIMEOUT]: this.caps[Capabilities.RASA_ENDPOINT_TIMEOUT],
         [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
         [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]: '{ "text": "{{msg.messageText}}" }',

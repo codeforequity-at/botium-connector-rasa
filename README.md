@@ -126,6 +126,12 @@ The Rasa endpoint URL is extended with /model/parse for posting the Botium reque
 **DIALOG_AND_NLU**
 Combining Rasa dialogue and NLU engine endpoints
 
+### RASA_REST_ENDPOINT_PATH
+Rest endpoint path. By default, it is `webhooks/rest/webhook`
+
+### RASA_NLU_ENDPOINT_PATH
+NLU endpoint path. By default, it is `model/parse`
+
 ### RASA_ENDPOINT_PING_URL
 _Default: endpoint URL/version_
 
